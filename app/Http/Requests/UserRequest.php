@@ -25,7 +25,7 @@ class UserRequest extends FormRequest
             'first_name' => 'required|string|min:3|max:40',
             'last_name' => 'required|string|min:3|max:40',
             'phone' => 'required|string|regex:/^\+7\d{10}$/',
-            'avatar' => 'required|image|mimes:jpg,png|max:2048'
+            'avatar_id' => 'required|exists:files,id'
         ];
     }
 }

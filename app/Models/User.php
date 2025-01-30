@@ -21,12 +21,17 @@ class User extends Authenticatable
         'first_name',
         'last_name',
         'phone',
-        'avatar'
+        'avatar_id'
     ];
 
     public function comments(): MorphMany
     {
         return $this->morphMany(Comment::class, 'commentable');
+    }
+
+    public function avatar()
+    {
+        return $this->belongsTo(File::class, 'avatar_id');
     }
 }
 

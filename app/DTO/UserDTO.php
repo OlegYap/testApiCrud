@@ -9,7 +9,7 @@ class UserDTO
         public readonly string $first_name,
         public readonly string $last_name,
         public readonly string $phone,
-        public readonly ?UploadedFile $avatar = null
+        public readonly ?int $avatar_id
     ) {}
 
     public function toArray(): array
@@ -18,6 +18,7 @@ class UserDTO
             'first_name' => $this->first_name,
             'last_name' => $this->last_name,
             'phone' => $this->phone,
+            'avatar_id' => $this->avatar_id,
         ];
     }
 
@@ -28,7 +29,7 @@ class UserDTO
             first_name: $request->first_name,
             last_name: $request->last_name,
             phone: $request->phone,
-            avatar: $request->file('avatar')
+            avatar_id: $request->avatar_id
         );
     }
 }

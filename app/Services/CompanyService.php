@@ -3,6 +3,7 @@
 namespace App\Services;
 use App\Models\Company;
 use App\DTO\CompanyDTO;
+use App\Models\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
@@ -20,32 +21,14 @@ class CompanyService
     public function create(CompanyDTO $dto): Company
     {
         try {
-            if (!$dto->logo instanceof UploadedFile) {
+            if (!File::find($dto->logo_id)) {
                 throw ValidationException::withMessages([
-                    'logo' => ['The logo file is required.']
+                    'logo_id' => ['The selected logo file does not exist.']
                 ]);
             }
-
-            $logoPath = $this->uploadLogo($dto->logo);
-
-            if (!$logoPath) {
-                throw ValidationException::withMessages([
-                    'logo' => ['Failed to upload logo.']
-                ]);
-            }
-
-            $companyData = $dto->toArray();
-            $companyData['logo'] = $logoPath;
-            return Company::create($companyData);
+            return Company::create($dto->toArray());
         } catch (\Exception $e) {
             Log::error('Error creating company: ' . $e->getMessage());
-
-            // Если файл был загружен, но создание компании не удалось,
-            // удаляем загруженный файл
-            if (isset($logoPath)) {
-                Storage::disk('public')->delete($logoPath);
-            }
-
             throw $e;
         }
     }
@@ -55,17 +38,12 @@ class CompanyService
         try {
             $companyData = $dto->toArray();
 
-            if ($dto->logo instanceof UploadedFile) {
-                $logoPath = $this->uploadLogo($dto->logo);
-
-                if (!$logoPath) {
+            if (isset($companyData['logo_id']) && $companyData['logo_id'] !== $company->logo_id) {
+                if (!File::find($companyData['logo_id'])) {
                     throw ValidationException::withMessages([
-                        'logo' => ['Failed to upload logo.']
+                        'logo_id' => ['The selected logo file does not exist.']
                     ]);
                 }
-
-                $this->deleteOldLogo($company);
-                $companyData['logo'] = $logoPath;
             }
 
             $company->update($companyData);
@@ -79,8 +57,12 @@ class CompanyService
     public function delete(Company $company): void
     {
         try {
-            $this->deleteOldLogo($company);
+            $file = File::find($company->logo_id);
             $company->delete();
+
+            if ($file && !Company::where('logo_id', $file->id)->exists()) {
+                $file->delete();
+            }
         } catch (\Exception $e) {
             Log::error('Error deleting company: ' . $e->getMessage());
             throw $e;
@@ -93,22 +75,5 @@ class CompanyService
             ->orderByDesc('comments_avg_rating')
             ->take($limit)
             ->get();
-    }
-
-    private function uploadLogo(UploadedFile $file): ?string
-    {
-        try {
-            return $file->store('logos', 'public');
-        } catch (\Exception $e) {
-            Log::error('Error uploading logo: ' . $e->getMessage());
-            return null;
-        }
-    }
-
-    private function deleteOldLogo(Company $company): void
-    {
-        if ($company->logo) {
-            Storage::disk('public')->delete($company->logo);
-        }
     }
 }

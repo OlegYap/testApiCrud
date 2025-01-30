@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services;
+use App\Models\File;
 use App\Models\User;
 use App\DTO\UserDTO;
 use Illuminate\Support\Facades\Log;
@@ -19,28 +20,14 @@ class UserService
     public function create(UserDTO $dto): User
     {
         try {
-            if (!$dto->avatar instanceof UploadedFile) {
+            if (!File::find($dto->avatar_id)) {
                 throw ValidationException::withMessages([
-                    'avatar' => ['The avatar file is required.']
+                    'avatar_id' => ['The selected avatar file does not exist.']
                 ]);
             }
-
-            $avatarPath = $this->uploadAvatar($dto->avatar);
-
-            if (!$avatarPath) {
-                throw ValidationException::withMessages([
-                    'avatar' => ['Failed to upload avatar.']
-                ]);
-            }
-            $userData = $dto->toArray();
-            $userData['avatar'] = $avatarPath;
-            return User::create($userData);
+            return User::create($dto->toArray());
         } catch (\Exception $e) {
             Log::error('Error creating user: ' . $e->getMessage());
-            if (isset($avatarPath)) {
-                Storage::disk('public')->delete($avatarPath);
-            }
-
             throw $e;
         }
     }
@@ -50,17 +37,13 @@ class UserService
         try {
             $userData = $dto->toArray();
 
-            if ($dto->avatar instanceof UploadedFile) {
-                $avatarPath = $this->uploadAvatar($dto->avatar);
-
-                if (!$avatarPath) {
+            if (isset($userData['avatar_id']) && $userData['avatar_id'] !== $user->avatar_id) {
+                // Проверяем существование нового файла
+                if (!File::find($userData['avatar_id'])) {
                     throw ValidationException::withMessages([
-                        'avatar' => ['Failed to upload avatar.']
+                        'avatar_id' => ['The selected avatar file does not exist.']
                     ]);
                 }
-
-                $this->deleteOldAvatar($user);
-                $userData['avatar'] = $avatarPath;
             }
 
             $user->update($userData);
@@ -74,28 +57,14 @@ class UserService
     public function delete(User $user): void
     {
         try {
-            $this->deleteOldAvatar($user);
+            $file = File::find($user->avatar_id);
             $user->delete();
+            if ($file && !User::where('avatar_id', $file->id)->exists()) {
+                $file->delete();
+            }
         } catch (\Exception $e) {
             Log::error('Error deleting user: ' . $e->getMessage());
             throw $e;
-        }
-    }
-
-    private function uploadAvatar(UploadedFile $file): ?string
-    {
-        try {
-            return $file->store('avatars', 'public');
-        } catch (\Exception $e) {
-            Log::error('Error uploading avatar: ' . $e->getMessage());
-            return null;
-        }
-    }
-
-    private function deleteOldAvatar(User $user): void
-    {
-        if ($user->avatar) {
-            Storage::disk('public')->delete($user->avatar);
         }
     }
 }
