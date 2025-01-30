@@ -26,7 +26,6 @@ class CompanyService
                 ]);
             }
 
-            $companyData = $dto->toArray();
             $logoPath = $this->uploadLogo($dto->logo);
 
             if (!$logoPath) {
@@ -35,6 +34,7 @@ class CompanyService
                 ]);
             }
 
+            $companyData = $dto->toArray();
             $companyData['logo'] = $logoPath;
             return Company::create($companyData);
         } catch (\Exception $e) {

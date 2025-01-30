@@ -25,7 +25,6 @@ class UserService
                 ]);
             }
 
-            $userData = $dto->toArray();
             $avatarPath = $this->uploadAvatar($dto->avatar);
 
             if (!$avatarPath) {
@@ -33,14 +32,11 @@ class UserService
                     'avatar' => ['Failed to upload avatar.']
                 ]);
             }
-
+            $userData = $dto->toArray();
             $userData['avatar'] = $avatarPath;
             return User::create($userData);
         } catch (\Exception $e) {
             Log::error('Error creating user: ' . $e->getMessage());
-
-            // Если файл был загружен, но создание пользователя не удалось,
-            // удаляем загруженный файл
             if (isset($avatarPath)) {
                 Storage::disk('public')->delete($avatarPath);
             }

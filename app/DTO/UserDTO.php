@@ -21,6 +21,7 @@ class UserDTO
         ];
     }
 
+
     public static function fromRequest($request): self
     {
         return new self(
