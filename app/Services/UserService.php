@@ -1,14 +1,12 @@
 <?php
 
 namespace App\Services;
+use App\DTO\UserUpdateDTO;
 use App\Models\File;
 use App\Models\User;
 use App\DTO\UserDTO;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Validation\ValidationException;
 
 class UserService
 {
@@ -20,11 +18,6 @@ class UserService
     public function create(UserDTO $dto): User
     {
         try {
-            if (!File::find($dto->avatar_id)) {
-                throw ValidationException::withMessages([
-                    'avatar_id' => ['The selected avatar file does not exist.']
-                ]);
-            }
             return User::create($dto->toArray());
         } catch (\Exception $e) {
             Log::error('Error creating user: ' . $e->getMessage());
@@ -32,20 +25,10 @@ class UserService
         }
     }
 
-    public function update(User $user, UserDTO $dto): User
+    public function update(User $user, UserUpdateDTO $dto): User
     {
         try {
             $userData = $dto->toArray();
-
-            if (isset($userData['avatar_id']) && $userData['avatar_id'] !== $user->avatar_id) {
-                // Проверяем существование нового файла
-                if (!File::find($userData['avatar_id'])) {
-                    throw ValidationException::withMessages([
-                        'avatar_id' => ['The selected avatar file does not exist.']
-                    ]);
-                }
-            }
-
             $user->update($userData);
             return $user;
         } catch (\Exception $e) {

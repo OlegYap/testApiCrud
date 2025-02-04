@@ -22,4 +22,8 @@ class File extends Model
         return $this->hasMany(User::class, 'avatar_id');
     }
 
+    public function companies(): HasMany
+    {
+        return $this->hasMany(Company::class, 'logo_id');
+    }
 }

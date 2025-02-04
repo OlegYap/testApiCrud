@@ -13,7 +13,9 @@ class Comment extends Model
         'content',
         'rating',
         'user_id',
-        'company_id'
+        'company_id',
+        'commentable_type',
+        'commentable_id'
     ];
 
     public function commentable(): MorphTo

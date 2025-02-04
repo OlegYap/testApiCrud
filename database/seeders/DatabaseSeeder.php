@@ -15,13 +15,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Создаем 10 пользователей
+
         $users = User::factory(10)->create();
 
-        // Создаем 5 компаний
-        $companies = Company::factory(5)->create();
+        $companies = Company::factory(10)->create();
 
-        // Создаем комментарии для каждой компании от каждого пользователя
         foreach ($companies as $company) {
             foreach ($users as $user) {
                 Comment::factory()->create([

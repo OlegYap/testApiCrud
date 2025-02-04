@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\DTO\CompanyUpdateDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CompanyUpdateRequest;
 use App\Models\Company;
@@ -35,7 +36,7 @@ class CompanyController extends Controller
 
     public function update(CompanyUpdateRequest $request, Company $company): JsonResponse
     {
-        $dto = CompanyDTO::fromRequest($request);
+        $dto = CompanyUpdateDTO::fromRequest($request);
         $updatedCompany = $this->companyService->update($company, $dto);
         return response()->json($updatedCompany);
     }
@@ -46,9 +47,25 @@ class CompanyController extends Controller
         return response()->json(null, 204);
     }
 
-    public function getTopCompanies(): JsonResponse
+    public function getTopCompanies(Company $company): JsonResponse
     {
-        $companies = $this->companyService->getTopRated();
+        $companies = $this->companyService->getTopRated($company);
         return response()->json($companies);
+    }
+
+    public function getComments(Company $company): JsonResponse
+    {
+        $comments = $this->companyService->getCompanyComments($company);
+        return response()->json($comments);
+    }
+
+    public function getAverageRating(Company $company): JsonResponse
+    {
+        $averageRating = $this->companyService->getCompanyAverageRating($company);
+
+        return response()->json([
+            'company_id'    => $company->id,
+            'averageRating' => $averageRating,
+        ]);
     }
 }

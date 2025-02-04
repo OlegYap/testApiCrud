@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Symfony\Component\HttpFoundation\Response;
 
 class UserUpdateRequest extends FormRequest
 {
@@ -11,7 +14,7 @@ class UserUpdateRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -25,7 +28,21 @@ class UserUpdateRequest extends FormRequest
             'first_name' => 'sometimes|string|min:3|max:40',
             'last_name' => 'sometimes|string|min:3|max:40',
             'phone' => 'sometimes|string|regex:/^\+7\d{10}$/',
-            'avatar' => 'sometimes|image|mimes:jpg,png|max:2048'
+            'avatar_id' => 'sometimes|exists:files,id'
         ];
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(response()->json([
+            'status' => 'error',
+            'message' => 'Validation failed',
+            'errors' => collect($validator->errors())->map(function ($errors, $field) {
+                return [
+                    'field' => $field,
+                    'message' => $errors[0]
+                ];
+            })->values()->all()
+        ], Response::HTTP_UNPROCESSABLE_ENTITY));
     }
 }

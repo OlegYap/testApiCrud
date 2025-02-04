@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Collection;
+
 
 class Company extends Model
 {
@@ -30,5 +32,18 @@ class Company extends Model
     public function getAverageRating(): float
     {
         return $this->comments()->avg('rating');
+    }
+
+    public static function getTopRated(int $limit = 10): Collection
+    {
+        return self::withAvg('comments', 'rating')
+            ->orderByDesc('comments_avg_rating')
+            ->take($limit)
+            ->get();
+    }
+
+    public function getCompanyComments(): Collection
+    {
+        return $this->comments;
     }
 }

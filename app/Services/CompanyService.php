@@ -1,15 +1,13 @@
 <?php
 
 namespace App\Services;
+use App\DTO\CompanyUpdateDTO;
 use App\Models\Company;
 use App\DTO\CompanyDTO;
 use App\Models\File;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Validation\ValidationException;
 
 class CompanyService
 {
@@ -21,11 +19,6 @@ class CompanyService
     public function create(CompanyDTO $dto): Company
     {
         try {
-            if (!File::find($dto->logo_id)) {
-                throw ValidationException::withMessages([
-                    'logo_id' => ['The selected logo file does not exist.']
-                ]);
-            }
             return Company::create($dto->toArray());
         } catch (\Exception $e) {
             Log::error('Error creating company: ' . $e->getMessage());
@@ -33,19 +26,10 @@ class CompanyService
         }
     }
 
-    public function update(Company $company, CompanyDTO $dto): Company
+    public function update(Company $company, CompanyUpdateDTO $dto): Company
     {
         try {
             $companyData = $dto->toArray();
-
-            if (isset($companyData['logo_id']) && $companyData['logo_id'] !== $company->logo_id) {
-                if (!File::find($companyData['logo_id'])) {
-                    throw ValidationException::withMessages([
-                        'logo_id' => ['The selected logo file does not exist.']
-                    ]);
-                }
-            }
-
             $company->update($companyData);
             return $company;
         } catch (\Exception $e) {
@@ -69,11 +53,18 @@ class CompanyService
         }
     }
 
-    public function getTopRated(int $limit = 10): Collection
+    public function getTopRated(Company $company): Collection
     {
-        return Company::withAvg('comments', 'rating')
-            ->orderByDesc('comments_avg_rating')
-            ->take($limit)
-            ->get();
+        return $company->getTopRated();
+    }
+
+    public function getCompanyComments(Company $company): Collection
+    {
+        return $company->getCompanyComments();
+    }
+
+    public function getCompanyAverageRating(Company $company): float
+    {
+        return $company->getAverageRating();
     }
 }

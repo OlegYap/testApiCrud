@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\DTO\UserUpdateDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UserUpdateRequest;
 use App\Models\User;
@@ -37,7 +38,7 @@ class UserController extends Controller
 
     public function update(UserUpdateRequest $request, User $user): JsonResponse
     {
-        $dto = UserDTO::fromRequest($request);
+        $dto = UserUpdateDTO::fromRequest($request);
         $updatedUser = $this->userService->update($user, $dto);
         return response()->json($updatedUser);
     }

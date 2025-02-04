@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\DTO\CommentUpdateDTO;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CommentUpdateRequest;
 use App\Models\Comment;
 use App\Http\Requests\CommentRequest;
 use App\Services\CommentService;
@@ -32,9 +34,9 @@ class CommentController extends Controller
         return response()->json($comment->load(['user', 'company']));
     }
 
-    public function update(CommentRequest $request, Comment $comment): JsonResponse
+    public function update(CommentUpdateRequest $request, Comment $comment): JsonResponse
     {
-        $dto = CommentDTO::fromRequest($request);
+        $dto = CommentUpdateDTO::fromRequest($request);
         $updatedComment = $this->commentService->update($comment, $dto);
         return response()->json($updatedComment);
     }
